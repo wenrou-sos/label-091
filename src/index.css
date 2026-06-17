@@ -1,0 +1,197 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Noto Sans SC", system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #3b2f22;
+  background-color: #f5f0e6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f5f0e6;
+  background-image:
+    radial-gradient(rgba(113, 80, 50, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, #f5f0e6 0%, #efe8d6 100%);
+  background-size: 22px 22px, 100% 100%;
+}
+
+@layer components {
+  .tea-card {
+    @apply bg-white/85 backdrop-blur-sm rounded-lg border border-tea-200/60
+           shadow-paper transition-all duration-300;
+  }
+  .tea-card:hover {
+    @apply shadow-tea -translate-y-0.5 border-leaf-400/40;
+  }
+
+  .tea-btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           rounded-md font-medium transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .tea-btn-primary {
+    @apply tea-btn bg-leaf-700 text-white hover:bg-leaf-600
+           focus:ring-leaf-500 shadow-sm;
+  }
+  .tea-btn-secondary {
+    @apply tea-btn bg-white border border-tea-300 text-tea-800
+           hover:bg-tea-50 focus:ring-tea-400;
+  }
+  .tea-btn-gold {
+    @apply tea-btn bg-gold-500 text-white hover:bg-gold-400
+           focus:ring-gold-400 shadow-sm;
+  }
+  .tea-btn-danger {
+    @apply tea-btn bg-amber2-400 text-white hover:bg-amber2-500
+           focus:ring-amber2-400;
+  }
+
+  .tea-chip {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full
+           text-xs font-medium border;
+  }
+
+  .section-title {
+    @apply font-serif text-xl md:text-2xl font-semibold text-leaf-800
+           flex items-center gap-2 pb-3 border-b border-tea-200/70;
+  }
+
+  .page-enter {
+    animation: fadein 360ms ease-out both;
+  }
+}
+
+/* Custom Slider */
+.tea-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #d94f4f 0%,
+    #e67e22 25%,
+    #c9a227 50%,
+    #74ad50 75%,
+    #2d5a27 100%
+  );
+  outline: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.tea-slider:hover {
+  box-shadow: 0 0 0 4px rgba(45, 90, 39, 0.1);
+}
+.tea-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #2d5a27;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.tea-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+  border-color: #579036;
+}
+.tea-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.18);
+}
+.tea-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #2d5a27;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #ede8d8;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9b27e;
+  border-radius: 999px;
+  border: 2px solid #ede8d8;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a97f44;
+}
+
+/* Report print styles */
+.report-a4 {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fffef8;
+  box-shadow: 0 4px 24px rgba(47, 32, 15, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+.report-a4::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+      rgba(201, 162, 39, 0.06) 1px,
+      transparent 1px
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Cg fill='%232d5a27' opacity='0.035'%3E%3Cpath d='M120 60c0-30 20-50 50-50 30 0 50 20 50 50 0 40-50 120-50 120S120 100 120 60zM230 180c0-30 20-50 50-50 30 0 50 20 50 50 0 40-50 120-50 120s-50-80-50-120zM80 240c0-30 20-50 50-50 30 0 50 20 50 50 0 40-50 120-50 120S80 280 80 240z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 24px 24px, 80% 80%;
+  background-position: center, 50% 30%;
+  background-repeat: repeat, no-repeat;
+  pointer-events: none;
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .report-a4 {
+    box-shadow: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+}
+
+/* Table zebra */
+.zebra-row:nth-child(even) {
+  background-color: rgba(237, 232, 216, 0.35);
+}
+
+/* Descriptor badge hover */
+.desc-badge {
+  transition: all 0.18s ease;
+}
+.desc-badge:hover {
+  transform: translateY(-1px);
+}
