@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   Award,
@@ -5,7 +6,9 @@ import {
   ChevronRight,
   Eye,
   FileText,
+  GitCompare,
   Info,
+  RotateCcw,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -13,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import SummaryTable from "@/components/SummaryTable";
 import DeviationChart from "@/components/DeviationChart";
 import RadarChart from "@/components/RadarChart";
+import ComparePanel from "@/components/ComparePanel";
 import { useReviewStore } from "@/store/reviewStore";
 import { FACTOR_ORDER } from "@/constants/factors";
 import { mean, round } from "@/utils/statistics";
@@ -38,6 +42,54 @@ export default function SummaryPage() {
   const reReviewList = summaries.filter((s) => s.needsReReview);
   const overallAvg = round(mean(summaries.map((s) => s.meanScore)), 2);
   const overallStd = round(mean(summaries.map((s) => s.stdDeviation)), 2);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showCompare, setShowCompare] = useState(false);
+
+  const selectedSummaries = useMemo(
+    () => summaries.filter((s) => selectedIds.has(s.sampleId)),
+    [summaries, selectedIds]
+  );
+
+  const handleToggleSelect = (sampleId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sampleId)) {
+        next.delete(sampleId);
+      } else {
+        if (next.size >= 4) return prev;
+        next.add(sampleId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === summaries.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(summaries.slice(0, 4).map((s) => s.sampleId)));
+    }
+  };
+
+  const handleClearSelection = () => setSelectedIds(new Set());
+
+  const handleOpenCompare = () => {
+    if (selectedIds.size >= 2 && selectedIds.size <= 4) {
+      setShowCompare(true);
+    }
+  };
+
+  const handleRemoveFromCompare = (sampleId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(sampleId);
+      if (next.size < 2) {
+        setShowCompare(false);
+      }
+      return next;
+    });
+  };
 
   // 各因子全局均分
   const factorGlobalAvg = FACTOR_ORDER.map((fk) => ({
@@ -193,11 +245,61 @@ export default function SummaryPage() {
       {/* 汇总主表 + 分歧图 */}
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <div className="xl:col-span-2">
-          <h3 className="font-serif text-lg font-bold text-leaf-800 mb-3 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            茶样汇总表（按综合得分排名）
-          </h3>
-          <SummaryTable />
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-3">
+            <h3 className="font-serif text-lg font-bold text-leaf-800 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              茶样汇总表（按综合得分排名）
+            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedIds.size > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-leaf-50 border border-leaf-200 text-xs">
+                  <span className="text-tea-700">
+                    已选 <b className="text-leaf-800">{selectedIds.size}</b> 个
+                    {selectedSummaries.length > 0 && (
+                      <span className="ml-1 text-tea-500">
+                        ({selectedSummaries.map((s) => s.blindCode).join("、")})
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    onClick={handleClearSelection}
+                    className="ml-1 text-tea-500 hover:text-tea-800 transition"
+                    title="清空选择"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={handleOpenCompare}
+                disabled={selectedIds.size < 2 || selectedIds.size > 4}
+                className="tea-btn-primary text-sm py-1.5 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={
+                  selectedIds.size < 2
+                    ? "请至少选择 2 个茶样"
+                    : selectedIds.size > 4
+                    ? "最多选择 4 个茶样"
+                    : "打开对比面板"
+                }
+              >
+                <GitCompare className="w-4 h-4" />
+                对比（{selectedIds.size}/2-4）
+              </button>
+            </div>
+          </div>
+          {selectedIds.size === 0 && (
+            <div className="mb-3 p-2.5 rounded-lg bg-amber-50/60 border border-amber-200/60 text-[11px] text-amber-800 flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                勾选表格左侧复选框，选择 <b>2-4 个</b> 茶样后点击「对比」按钮，可并排查看五项因子的详细差异
+              </span>
+            </div>
+          )}
+          <SummaryTable
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
+          />
           {reReviewList.length > 0 && (
             <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-300 flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-amber2-500 shrink-0 mt-0.5" />
@@ -219,6 +321,14 @@ export default function SummaryPage() {
           <DeviationChart />
         </div>
       </section>
+
+      {showCompare && selectedSummaries.length >= 2 && (
+        <ComparePanel
+          summaries={selectedSummaries}
+          onClose={() => setShowCompare(false)}
+          onRemove={handleRemoveFromCompare}
+        />
+      )}
     </div>
   );
 }

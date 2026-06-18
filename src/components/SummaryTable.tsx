@@ -13,12 +13,29 @@ const FACTOR_NAME: Record<string, string> = {
   leaf: "叶底",
 };
 
-export default function SummaryTable() {
+interface SummaryTableProps {
+  selectedIds?: Set<string>;
+  onToggleSelect?: (sampleId: string) => void;
+  onToggleSelectAll?: () => void;
+  disableSelect?: boolean;
+}
+
+export default function SummaryTable({
+  selectedIds = new Set(),
+  onToggleSelect,
+  onToggleSelectAll,
+  disableSelect = false,
+}: SummaryTableProps) {
   const getSampleSummaries = useReviewStore((s) => s.getSampleSummaries);
   const summaries = useMemo(
     () => getSampleSummaries().slice().sort((a, b) => a.ranking - b.ranking),
     [getSampleSummaries]
   );
+
+  const allSelected = useMemo(() => {
+    if (summaries.length === 0) return false;
+    return summaries.every((s) => selectedIds.has(s.sampleId));
+  }, [summaries, selectedIds]);
 
   return (
     <div className="tea-card overflow-hidden animate-fadein">
@@ -26,6 +43,16 @@ export default function SummaryTable() {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-gradient-to-r from-leaf-700 to-leaf-600 text-white">
+              {!disableSelect && (
+                <th className="px-3 py-3 text-center font-semibold w-12">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={onToggleSelectAll}
+                    className="w-4 h-4 rounded border-white/30 bg-white/20 text-leaf-500 focus:ring-leaf-300 focus:ring-offset-0 cursor-pointer accent-leaf-300"
+                  />
+                </th>
+              )}
               <th className="px-3 py-3 text-left font-semibold w-16">排名</th>
               <th className="px-3 py-3 text-left font-semibold">盲评编号</th>
               {FACTOR_ORDER.map((fk) => (
@@ -47,7 +74,14 @@ export default function SummaryTable() {
           </thead>
           <tbody>
             {summaries.map((s, idx) => (
-              <Row key={s.sampleId} summary={s} rankIdx={idx} />
+              <Row
+                key={s.sampleId}
+                summary={s}
+                rankIdx={idx}
+                selected={selectedIds.has(s.sampleId)}
+                onToggleSelect={onToggleSelect}
+                disableSelect={disableSelect}
+              />
             ))}
           </tbody>
         </table>
@@ -56,7 +90,21 @@ export default function SummaryTable() {
   );
 }
 
-function Row({ summary, rankIdx }: { summary: SampleSummary; rankIdx: number }) {
+interface RowProps {
+  summary: SampleSummary;
+  rankIdx: number;
+  selected?: boolean;
+  onToggleSelect?: (sampleId: string) => void;
+  disableSelect?: boolean;
+}
+
+function Row({
+  summary,
+  rankIdx,
+  selected = false,
+  onToggleSelect,
+  disableSelect = false,
+}: RowProps) {
   const rankBg =
     rankIdx === 0
       ? "bg-gradient-to-r from-gold-100 via-gold-50 to-transparent"
@@ -65,10 +113,21 @@ function Row({ summary, rankIdx }: { summary: SampleSummary; rankIdx: number }) 
       : rankIdx === 2
       ? "bg-gradient-to-r from-amber-100 via-amber-50 to-transparent"
       : "";
+  const selectedBg = selected ? "bg-leaf-50/70" : "";
   return (
     <tr
-      className={`zebra-row ${summary.needsReReview ? "animate-breathe" : ""} ${rankBg}`}
+      className={`zebra-row ${summary.needsReReview ? "animate-breathe" : ""} ${selected ? selectedBg : rankBg} ${selected ? "ring-1 ring-inset ring-leaf-400/40" : ""}`}
     >
+      {!disableSelect && (
+        <td className="px-3 py-3 border-b border-tea-100 text-center">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggleSelect?.(summary.sampleId)}
+            className="w-4 h-4 rounded border-tea-300 bg-white text-leaf-600 focus:ring-leaf-400 focus:ring-2 cursor-pointer accent-leaf-600"
+          />
+        </td>
+      )}
       <td className="px-3 py-3 border-b border-tea-100 font-bold">
         <div className="flex items-center gap-1.5">
           {rankIdx === 0 && <Trophy className="w-4 h-4 text-gold-500" />}
