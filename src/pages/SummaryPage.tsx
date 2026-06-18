@@ -65,10 +65,11 @@ export default function SummaryPage() {
   };
 
   const handleToggleSelectAll = () => {
-    if (selectedIds.size === summaries.length) {
+    if (selectedIds.size > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(summaries.slice(0, 4).map((s) => s.sampleId)));
+      const max = Math.min(4, summaries.length);
+      setSelectedIds(new Set(summaries.slice(0, max).map((s) => s.sampleId)));
     }
   };
 

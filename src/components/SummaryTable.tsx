@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { AlertTriangle, Award, Trophy } from "lucide-react";
 import { useReviewStore } from "@/store/reviewStore";
 import type { SampleSummary } from "@/types";
@@ -31,11 +31,23 @@ export default function SummaryTable({
     () => getSampleSummaries().slice().sort((a, b) => a.ranking - b.ranking),
     [getSampleSummaries]
   );
+  const headCheckboxRef = useRef<HTMLInputElement>(null);
 
-  const allSelected = useMemo(() => {
-    if (summaries.length === 0) return false;
-    return summaries.every((s) => selectedIds.has(s.sampleId));
-  }, [summaries, selectedIds]);
+  const selectMax = Math.min(4, summaries.length);
+  const { fullySelected, partiallySelected } = useMemo(() => {
+    const count = selectedIds.size;
+    return {
+      fullySelected: count > 0 && count === selectMax,
+      partiallySelected: count > 0 && count < selectMax,
+    };
+  }, [selectedIds, selectMax]);
+
+  useEffect(() => {
+    if (headCheckboxRef.current) {
+      headCheckboxRef.current.indeterminate = partiallySelected;
+      headCheckboxRef.current.checked = fullySelected;
+    }
+  }, [fullySelected, partiallySelected]);
 
   return (
     <div className="tea-card overflow-hidden animate-fadein">
@@ -46,9 +58,14 @@ export default function SummaryTable({
               {!disableSelect && (
                 <th className="px-3 py-3 text-center font-semibold w-12">
                   <input
+                    ref={headCheckboxRef}
                     type="checkbox"
-                    checked={allSelected}
                     onChange={onToggleSelectAll}
+                    title={
+                      fullySelected || partiallySelected
+                        ? "清空所有选择"
+                        : `快速选择前 ${selectMax} 个茶样（最多 4 个）`
+                    }
                     className="w-4 h-4 rounded border-white/30 bg-white/20 text-leaf-500 focus:ring-leaf-300 focus:ring-offset-0 cursor-pointer accent-leaf-300"
                   />
                 </th>
