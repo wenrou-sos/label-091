@@ -197,6 +197,7 @@ export default function ReviewPanelPage() {
           <div style={{ animationDelay: `${i * 80}ms` }} key={f.factorKey}>
             <FactorScoringCard
               factor={f}
+              disabled={!!prev}
               onSubFactorChange={(subKey, updates) =>
                 handleChange(f.factorKey, subKey, updates)
               }

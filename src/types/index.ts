@@ -47,6 +47,7 @@ export interface JudgeScoreRecord {
 export interface SampleSummary {
   sampleId: string;
   blindCode: string;
+  realName?: string;
   scoresCount: number;
   meanScore: number;
   stdDeviation: number;

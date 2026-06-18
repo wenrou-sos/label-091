@@ -16,6 +16,7 @@ interface FactorScoringCardProps {
     updates: Partial<Pick<SubFactor, "score" | "selectedDescriptor">>
   ) => void;
   defaultOpen?: boolean;
+  disabled?: boolean;
 }
 
 const ICON_MAP: Record<FactorKey, typeof Sparkles> = {
@@ -63,6 +64,7 @@ export default function FactorScoringCard({
   factor,
   onSubFactorChange,
   defaultOpen = true,
+  disabled = false,
 }: FactorScoringCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const def = FACTOR_DEFINITIONS.find((d) => d.key === factor.factorKey);
@@ -73,13 +75,16 @@ export default function FactorScoringCard({
 
   return (
     <div
-      className={`tea-card border-2 ${color.ring} overflow-hidden animate-fadein`}
+      className={`tea-card border-2 ${color.ring} overflow-hidden animate-fadein ${
+        disabled ? "opacity-95" : ""
+      }`}
     >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={`w-full px-4 py-3 flex items-center justify-between gap-3
-                   bg-gradient-to-r ${color.bg} hover:brightness-[0.98] transition-all`}
+                   bg-gradient-to-r ${color.bg} hover:brightness-[0.98] transition-all
+                   ${disabled ? "cursor-default" : ""}`}
       >
         <div className="flex items-center gap-3 min-w-0">
           <div
@@ -98,6 +103,11 @@ export default function FactorScoringCard({
               <span className="tea-chip bg-white border-tea-200 text-tea-700">
                 权重 {(factor.weight * 100).toFixed(0)}%
               </span>
+              {disabled && (
+                <span className="tea-chip bg-tea-100 border-tea-300 text-tea-600">
+                  已归档
+                </span>
+              )}
             </div>
             <p className="text-xs text-tea-600 mt-0.5 line-clamp-1">
               {def?.description}
@@ -133,11 +143,17 @@ export default function FactorScoringCard({
       </button>
 
       {open && (
-        <div className="px-4 py-4 space-y-4 border-t border-tea-100 bg-white/60">
+        <div
+          className={`px-4 py-4 space-y-4 border-t border-tea-100 ${
+            disabled ? "bg-tea-50/40" : "bg-white/60"
+          }`}
+        >
           {factor.subFactors.map((sf, i) => (
             <div
               key={sf.key}
-              className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-start p-3 rounded-lg bg-gradient-to-r from-tea-50/50 to-white border border-tea-100"
+              className={`grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-start p-3 rounded-lg bg-gradient-to-r from-tea-50/50 to-white border border-tea-100 ${
+                disabled ? "pointer-events-none select-none opacity-90" : ""
+              }`}
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="md:col-span-3 space-y-2">
@@ -155,6 +171,7 @@ export default function FactorScoringCard({
                   onChange={(v) =>
                     onSubFactorChange(sf.key, { selectedDescriptor: v })
                   }
+                  disabled={disabled}
                 />
               </div>
               <div className="md:col-span-9">
@@ -163,6 +180,7 @@ export default function FactorScoringCard({
                   onChange={(v) =>
                     onSubFactorChange(sf.key, { score: round(v, 1) })
                   }
+                  disabled={disabled}
                 />
               </div>
             </div>

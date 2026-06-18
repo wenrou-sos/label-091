@@ -6,6 +6,7 @@ interface DescriptorSelectProps {
   value?: string;
   onChange: (value: string) => void;
   label?: string;
+  disabled?: boolean;
 }
 
 export default function DescriptorSelect({
@@ -13,6 +14,7 @@ export default function DescriptorSelect({
   value,
   onChange,
   label,
+  disabled = false,
 }: DescriptorSelectProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -32,25 +34,30 @@ export default function DescriptorSelect({
       )}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-md
-                   border border-tea-200 bg-white hover:border-leaf-400 hover:bg-leaf-50/50
-                   text-sm transition-all text-left focus:outline-none focus:ring-2 focus:ring-leaf-400/50"
+        disabled={disabled}
+        onClick={() => !disabled && setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-md
+                   border border-tea-200 text-sm transition-all text-left
+                   focus:outline-none focus:ring-2 focus:ring-leaf-400/50
+                   ${disabled
+                     ? "bg-tea-50 text-tea-500 cursor-not-allowed opacity-80"
+                     : "bg-white hover:border-leaf-400 hover:bg-leaf-50/50"
+                   }`}
       >
         <span
           className={`truncate font-medium ${
-            value ? "text-leaf-800" : "text-tea-500"
+            value ? (disabled ? "text-tea-700" : "text-leaf-800") : "text-tea-500"
           }`}
         >
           {value || "请选择描述词"}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-tea-500 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`w-4 h-4 transition-transform flex-shrink-0 ${
+            disabled ? "text-tea-400" : "text-tea-500"
+          } ${open ? "rotate-180" : ""}`}
         />
       </button>
-      {open && (
+      {open && !disabled && (
         <div className="absolute z-30 left-0 right-0 mt-1 py-1 rounded-lg border border-tea-200 bg-white shadow-tea max-h-56 overflow-y-auto animate-fadein">
           {options.map((opt) => {
             const active = opt === value;

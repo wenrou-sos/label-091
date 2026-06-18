@@ -132,11 +132,9 @@ export default forwardRef<HTMLDivElement, ReportPreviewProps>(
                     <div className="font-serif font-bold text-leaf-800 text-base">
                       {s.blindCode}
                     </div>
-                    {showRealNames && (
-                      <div className="text-[10px] text-tea-500 mt-0.5">
-                        {report.sampleSummaries
-                          .find((x) => x.sampleId === s.sampleId)
-                          ?.blindCode && ""}
+                    {showRealNames && s.realName && (
+                      <div className="text-[10px] text-tea-600 mt-0.5 truncate">
+                        🔓 {s.realName}
                       </div>
                     )}
                   </div>
@@ -218,8 +216,15 @@ export default forwardRef<HTMLDivElement, ReportPreviewProps>(
               <tbody>
                 {report.sampleSummaries.map((s) => (
                   <tr key={s.sampleId} className="bg-white hover:bg-tea-50/50">
-                    <td className="border border-tea-200 px-2 py-2 font-bold text-leaf-700">
-                      {s.blindCode}
+                    <td className="border border-tea-200 px-2 py-2">
+                      <div className="font-bold text-leaf-700">
+                        {s.blindCode}
+                      </div>
+                      {showRealNames && s.realName && (
+                        <div className="text-[9px] text-tea-600 truncate">
+                          {s.realName}
+                        </div>
+                      )}
                     </td>
                     {FACTOR_ORDER.map((fk) => (
                       <td

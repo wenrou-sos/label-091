@@ -166,6 +166,7 @@ export function summarizeSample(
   return {
     sampleId: sample.id,
     blindCode: sample.blindCode,
+    realName: sample.realName,
     scoresCount: records.length,
     meanScore: m,
     stdDeviation: sd,
