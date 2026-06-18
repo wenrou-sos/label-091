@@ -1,13 +1,18 @@
+import { useMemo, useState } from "react";
 import {
   Award,
   BarChart3,
+  ChevronDown,
   ChevronRight,
   Clock,
   Eye,
   FileText,
+  Filter,
   Info,
+  Search,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TeaSampleCard from "@/components/TeaSampleCard";
@@ -23,17 +28,52 @@ const FACTOR_NAME: Record<string, string> = {
   leaf: "叶底",
 };
 
+const TEA_CATEGORIES = [
+  { key: "all", label: "全部茶类" },
+  { key: "绿茶", label: "绿茶" },
+  { key: "红茶", label: "红茶" },
+  { key: "乌龙茶", label: "乌龙茶" },
+  { key: "白茶", label: "白茶" },
+  { key: "黑茶", label: "黑茶" },
+  { key: "黄茶", label: "黄茶" },
+];
+
 export default function HallPage() {
   const nav = useNavigate();
   const { samples, records, judges, currentJudgeId, getSampleSummaries } =
     useReviewStore();
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [catOpen, setCatOpen] = useState(false);
+
   const totalScores = records.length;
   const expectedScores = samples.length * judges.length;
-  const overallProgress = (totalScores / expectedScores) * 100;
+  const overallProgress = samples.length
+    ? (totalScores / expectedScores) * 100
+    : 0;
   const mySubmitted = records.filter((r) => r.judgeId === currentJudgeId).length;
   const summaries = getSampleSummaries().sort((a, b) => a.ranking - b.ranking);
   const topSample = summaries[0];
   const reReviewCount = summaries.filter((s) => s.needsReReview).length;
+
+  const filteredSamples = useMemo(() => {
+    const kw = searchKeyword.trim().toLowerCase();
+    return samples.filter((s) => {
+      const hitKw =
+        !kw ||
+        s.blindCode.toLowerCase().includes(kw) ||
+        (s.realName && s.realName.toLowerCase().includes(kw)) ||
+        (s.origin && s.origin.toLowerCase().includes(kw));
+      const hitCat =
+        categoryFilter === "all" ||
+        (s.category && s.category.includes(categoryFilter));
+      return hitKw && hitCat;
+    });
+  }, [samples, searchKeyword, categoryFilter]);
+
+  const hasActiveFilter = searchKeyword.trim() !== "" || categoryFilter !== "all";
+  const activeCategoryLabel =
+    TEA_CATEGORIES.find((c) => c.key === categoryFilter)?.label || "全部茶类";
 
   return (
     <div className="page-enter space-y-6">
@@ -218,22 +258,155 @@ export default function HallPage() {
 
       {/* 茶样卡片网格 */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="section-title !border-b-0 !pb-0">
-            <Eye className="w-5 h-5 text-leaf-700" />
-            盲评茶样列表
-          </h2>
-          <span className="text-xs text-tea-600">
-            样本按盲评编号展示，真实茶名于报告导出时可选择性披露
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {samples.map((s, i) => (
-            <div style={{ animationDelay: `${i * 60}ms` }} key={s.id}>
-              <TeaSampleCard sample={s} />
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+          <div>
+            <h2 className="section-title !border-b-0 !pb-0">
+              <Eye className="w-5 h-5 text-leaf-700" />
+              盲评茶样列表
+            </h2>
+            <p className="text-xs text-tea-600 mt-1">
+              样本按盲评编号展示，真实茶名于报告导出时可选择性披露
+            </p>
+          </div>
+
+          {/* 搜索和筛选 */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* 搜索框 */}
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-tea-500" />
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="搜索盲评编号 / 真实茶名 / 产地…"
+                className="w-full sm:w-72 pl-9 pr-9 py-2 rounded-md border border-tea-200 bg-white text-sm
+                           placeholder:text-tea-400 focus:outline-none focus:ring-2 focus:ring-leaf-400/50 focus:border-leaf-400
+                           transition-all"
+              />
+              {searchKeyword && (
+                <button
+                  onClick={() => setSearchKeyword("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-md
+                             text-tea-400 hover:text-tea-700 hover:bg-tea-100 transition"
+                  title="清空搜索"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-          ))}
+
+            {/* 茶类筛选下拉 */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setCatOpen((o) => !o)}
+                className={`w-full sm:w-auto inline-flex items-center gap-2 px-3 py-2 rounded-md border
+                           bg-white text-sm transition-all focus:outline-none focus:ring-2 focus:ring-leaf-400/50
+                           ${categoryFilter !== "all"
+                             ? "border-leaf-400 bg-leaf-50 text-leaf-800 font-medium"
+                             : "border-tea-200 text-tea-700 hover:border-leaf-400 hover:bg-leaf-50/50"
+                           }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>{activeCategoryLabel}</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${catOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {catOpen && (
+                <div
+                  className="absolute z-30 right-0 top-full mt-1 w-40 py-1 rounded-lg border border-tea-200
+                             bg-white shadow-tea overflow-hidden animate-fadein"
+                  onMouseLeave={() => setCatOpen(false)}
+                >
+                  {TEA_CATEGORIES.map((c) => {
+                    const active = c.key === categoryFilter;
+                    return (
+                      <button
+                        key={c.key}
+                        onClick={() => {
+                          setCategoryFilter(c.key);
+                          setCatOpen(false);
+                        }}
+                        className={`desc-badge w-full px-3 py-1.5 text-sm text-left ${
+                          active
+                            ? "bg-leaf-50 text-leaf-800 font-semibold"
+                            : "text-tea-800 hover:bg-tea-50"
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 清除筛选 */}
+            {hasActiveFilter && (
+              <button
+                onClick={() => {
+                  setSearchKeyword("");
+                  setCategoryFilter("all");
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-2 rounded-md text-xs
+                           text-tea-600 hover:text-leaf-700 hover:bg-tea-100 transition"
+              >
+                <X className="w-3.5 h-3.5" />
+                清除筛选
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* 结果统计条 */}
+        <div className="mb-3 flex items-center justify-between text-xs text-tea-600">
+          <div>
+            {hasActiveFilter ? (
+              <>
+                筛选结果：共 <b className="text-leaf-800">{filteredSamples.length}</b> 个
+                （全部 {samples.length} 个）
+              </>
+            ) : (
+              <>共 <b className="text-leaf-800">{samples.length}</b> 个茶样等待审评</>
+            )}
+          </div>
+        </div>
+
+        {filteredSamples.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredSamples.map((s, i) => (
+              <div
+                style={{ animationDelay: `${i * 60}ms` }}
+                key={s.id}
+                className="animate-fadein"
+              >
+                <TeaSampleCard sample={s} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="tea-card p-10 text-center">
+            <Search className="w-10 h-10 text-tea-400 mx-auto mb-3" />
+            <h3 className="font-serif text-lg font-bold text-tea-800 mb-1">
+              没有匹配的茶样
+            </h3>
+            <p className="text-sm text-tea-500 mb-4">
+              请尝试修改搜索关键词或清除筛选条件
+            </p>
+            <button
+              onClick={() => {
+                setSearchKeyword("");
+                setCategoryFilter("all");
+              }}
+              className="tea-btn-primary"
+            >
+              <X className="w-4 h-4" />
+              清除全部筛选
+            </button>
+          </div>
+        )}
+
         {/* 消除未使用变量警告 */}
         <span className="hidden">{FACTOR_ORDER.join("")}</span>
       </section>
