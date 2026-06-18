@@ -1,10 +1,13 @@
+import { useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
 import { useReviewStore } from "@/store/reviewStore";
 import { STD_DEV_THRESHOLD } from "@/constants/factors";
 
 export default function DeviationChart() {
-  const summaries = useReviewStore((s) =>
-    s.getSampleSummaries().sort((a, b) => b.stdDeviation - a.stdDeviation)
+  const getSampleSummaries = useReviewStore((s) => s.getSampleSummaries);
+  const summaries = useMemo(
+    () => getSampleSummaries().slice().sort((a, b) => b.stdDeviation - a.stdDeviation),
+    [getSampleSummaries]
   );
   const max = Math.max(STD_DEV_THRESHOLD * 1.4, ...summaries.map((s) => s.stdDeviation));
 

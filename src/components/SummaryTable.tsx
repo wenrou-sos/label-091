@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { AlertTriangle, Award, Trophy } from "lucide-react";
 import { useReviewStore } from "@/store/reviewStore";
 import type { SampleSummary } from "@/types";
@@ -13,8 +14,10 @@ const FACTOR_NAME: Record<string, string> = {
 };
 
 export default function SummaryTable() {
-  const summaries = useReviewStore((s) =>
-    s.getSampleSummaries().sort((a, b) => a.ranking - b.ranking)
+  const getSampleSummaries = useReviewStore((s) => s.getSampleSummaries);
+  const summaries = useMemo(
+    () => getSampleSummaries().slice().sort((a, b) => a.ranking - b.ranking),
+    [getSampleSummaries]
   );
 
   return (
