@@ -12,6 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import SummaryTable from "@/components/SummaryTable";
 import DeviationChart from "@/components/DeviationChart";
+import RadarChart from "@/components/RadarChart";
 import { useReviewStore } from "@/store/reviewStore";
 import { FACTOR_ORDER } from "@/constants/factors";
 import { mean, round } from "@/utils/statistics";
@@ -185,6 +186,9 @@ export default function SummaryPage() {
           </span>
         </div>
       </section>
+
+      {/* 五因子雷达对比图 */}
+      <RadarChart summaries={summaries} />
 
       {/* 汇总主表 + 分歧图 */}
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">
